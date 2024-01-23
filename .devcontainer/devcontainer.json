@@ -13,8 +13,8 @@
                 "eamodio.gitlens",
                 "GitHub.copilot-chat",
                 "GitHub.copilot",
-                "juanblanco.solidity",
-                "mhutchie.git-graph"
+                "mhutchie.git-graph",
+                "NomicFoundation.hardhat-solidity"
             ]
         }
     }
