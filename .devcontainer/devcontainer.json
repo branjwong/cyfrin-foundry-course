@@ -10,7 +10,11 @@
         "vscode": {
             // Add the IDs of extensions you want installed when the container is created.
             "extensions": [
-                "juanblanco.solidity"
+                "eamodio.gitlens",
+                "GitHub.copilot-chat",
+                "GitHub.copilot",
+                "juanblanco.solidity",
+                "mhutchie.git-graph"
             ]
         }
     }
