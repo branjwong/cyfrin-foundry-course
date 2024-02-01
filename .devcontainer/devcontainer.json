@@ -14,7 +14,8 @@
                 "GitHub.copilot-chat",
                 "GitHub.copilot",
                 "mhutchie.git-graph",
-                "NomicFoundation.hardhat-solidity"
+                "NomicFoundation.hardhat-solidity",
+                "tamasfe.even-better-toml"
             ]
         }
     }

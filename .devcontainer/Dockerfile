@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/devcontainers/base:debian-10
+# Use the latest foundry image
+FROM ghcr.io/foundry-rs/foundry
 
-RUN <<EOT bash
-    apt update
-    apt install curl
+# # Copy our source code into the container
+# WORKDIR /app
 
-    curl -L https://foundry.paradigm.xyz | bash
-    source /root/.bashrc
-    foundryup
-EOT
+# # Build and test the source code
+# COPY . .
+# RUN forge build
+# RUN forge test
