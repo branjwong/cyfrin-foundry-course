@@ -35,4 +35,11 @@ contract FundMeTest is Test {
     function test_price_feed_version_is_accurate() public {
         assertEq(fundMe.getVersion(), 4);
     }
+
+    function test_fund_updates_funded_data_structure() public {
+        fundMe.fund{value: 10e18}();
+
+        assertEq(fundMe.s_addressToAmountFunded(address(this)), 10e18);
+        assertEq(fundMe.s_funders(0), address(this));
+    }
 }
