@@ -16,9 +16,10 @@ contract FundMeTest is Test {
     uint256 STARTING_BALANCE = 1000 ether;
 
     function setUp() external {
+        vm.deal(USER, STARTING_BALANCE);
+
         deployFundMe = new DeployFundMe();
         fundMe = deployFundMe.run();
-        vm.deal(USER, STARTING_BALANCE);
     }
 
     function test_minimum_dollar_is_five() public {
@@ -29,23 +30,76 @@ contract FundMeTest is Test {
         // Incorrect: msg.sender is the sender of the transaction, `forge test`, not the contract
         // assertEq(address(fundMe.i_owner()), address(msg.sender));
 
-        console.log("owner", address(fundMe.i_owner()));
+        console.log("owner", address(fundMe.getOwner()));
         console.log("this", address(this));
         console.log("msg.sender", address(msg.sender));
         console.log("deployFundMe", address(deployFundMe));
         console.log("fundMe", address(fundMe));
-        assertEq(address(fundMe.i_owner()), address(msg.sender));
+        assertEq(address(fundMe.getOwner()), address(msg.sender));
     }
 
     function test_price_feed_version_is_accurate() public {
         assertEq(fundMe.getVersion(), 4);
     }
 
-    function test_fund_updates_funded_data_structure() public {
+    modifier funded() {
         vm.prank(USER); // Next TX sent by USER
         fundMe.fund{value: SEND_VALUE}();
+        _;
+    }
 
-        assertEq(fundMe.s_addressToAmountFunded(USER), SEND_VALUE);
-        assertEq(fundMe.s_funders(0), USER);
+    function test_fund_updates_addressToAmountFunded() public funded {
+        assertEq(fundMe.getAddressToAmountFunded(USER), SEND_VALUE);
+    }
+
+    function test_fund_adds_funder_to_array_of_funders() public funded {
+        assertEq(fundMe.getFunder(0), USER);
+    }
+
+    function test_non_owners_cannot_withdraw() public funded {
+        vm.prank(USER); // Next TX sent by USER
+        vm.expectRevert();
+        fundMe.withdraw();
+    }
+
+    function test_owners_can_withdraw_from_single_funder() public funded {
+        // Arrange
+        uint256 startingOwnerBalance = fundMe.getOwner().balance;
+        uint256 startingFundMeBalance = address(fundMe).balance;
+
+        // Act
+        vm.prank(fundMe.getOwner()); // Next TX sent by OWNER
+        fundMe.withdraw();
+
+        // Assert
+        assertEq(
+            fundMe.getOwner().balance,
+            startingOwnerBalance + startingFundMeBalance
+        );
+        assertEq(address(fundMe).balance, 0);
+    }
+
+    function test_owners_can_withdraw_from_single_funders() public {
+        // Arrange
+        for (uint160 i = 1; i <= 5; i++) {
+            hoax(address(i), SEND_VALUE); // sets up a prank with some ether
+            fundMe.fund{value: SEND_VALUE}();
+        }
+
+        uint256 startingOwnerBalance = fundMe.getOwner().balance;
+        uint256 startingFundMeBalance = address(fundMe).balance;
+        assertEq(startingFundMeBalance, SEND_VALUE * 5);
+
+        // Act
+        vm.startPrank(fundMe.getOwner()); // multi-line pranking
+        fundMe.withdraw();
+        vm.stopPrank();
+
+        // Assert
+        assertEq(
+            fundMe.getOwner().balance,
+            startingOwnerBalance + startingFundMeBalance
+        );
+        assertEq(address(fundMe).balance, 0);
     }
 }
