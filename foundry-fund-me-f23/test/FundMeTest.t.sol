@@ -11,9 +11,14 @@ contract FundMeTest is Test {
     FundMe fundMe;
     DeployFundMe deployFundMe;
 
+    address USER = makeAddr("user");
+    uint256 SEND_VALUE = 0.1 ether; /// 100000000000000000
+    uint256 STARTING_BALANCE = 1000 ether;
+
     function setUp() external {
         deployFundMe = new DeployFundMe();
         fundMe = deployFundMe.run();
+        vm.deal(USER, STARTING_BALANCE);
     }
 
     function test_minimum_dollar_is_five() public {
@@ -37,9 +42,10 @@ contract FundMeTest is Test {
     }
 
     function test_fund_updates_funded_data_structure() public {
-        fundMe.fund{value: 10e18}();
+        vm.prank(USER); // Next TX sent by USER
+        fundMe.fund{value: SEND_VALUE}();
 
-        assertEq(fundMe.s_addressToAmountFunded(address(this)), 10e18);
-        assertEq(fundMe.s_funders(0), address(this));
+        assertEq(fundMe.s_addressToAmountFunded(USER), SEND_VALUE);
+        assertEq(fundMe.s_funders(0), USER);
     }
 }
