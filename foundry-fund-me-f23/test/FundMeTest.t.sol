@@ -12,8 +12,8 @@ contract FundMeTest is Test {
     DeployFundMe deployFundMe;
 
     address USER = makeAddr("user");
-    uint256 SEND_VALUE = 0.1 ether; /// 100000000000000000
-    uint256 STARTING_BALANCE = 1000 ether;
+    uint256 constant SEND_VALUE = 0.1 ether; /// 100000000000000000
+    uint256 constant STARTING_BALANCE = 1000 ether;
 
     function setUp() external {
         vm.deal(USER, STARTING_BALANCE);
@@ -79,7 +79,7 @@ contract FundMeTest is Test {
         assertEq(address(fundMe).balance, 0);
     }
 
-    function test_owners_can_withdraw_from_single_funders() public {
+    function test_owners_can_withdraw_from_multiple_funders() public {
         // Arrange
         for (uint160 i = 1; i <= 5; i++) {
             hoax(address(i), SEND_VALUE); // sets up a prank with some ether
