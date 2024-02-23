@@ -8,6 +8,8 @@ import {Raffle} from "../../src/Raffle.sol";
 import {Test, console} from "forge-std/Test.sol";
 
 contract RaffleTest is Test {
+    event EnteredRaffle(address indexed player);
+
     Raffle raffle;
     HelperConfig helperConfig;
 
@@ -32,9 +34,48 @@ contract RaffleTest is Test {
             subscriptionId,
             callbackGasLimit
         ) = helperConfig.activeNetworkConfig();
+
+        vm.deal(PLAYER, STARTING_BALANCE);
     }
 
-    function test_raffle_initializes_in_open_state() public {
+    function test_raffle_initializes_in_open_state() public view {
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
+    }
+
+    function test_raffle_reverts_when_you_dont_pay_enough() public {
+        vm.prank(PLAYER);
+
+        vm.expectRevert(Raffle.Raffle__NotEnoughEthToEnterRaffle.selector);
+        raffle.enterRaffle();
+    }
+
+    function test_raffle_records_player_when_they_enter() public {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+
+        assert(PLAYER == raffle.getPlayer(0));
+    }
+
+    function test_raffle_emits_event_on_entrance() public {
+        vm.prank(PLAYER);
+
+        vm.expectEmit(true, false, false, false, address(raffle));
+        emit EnteredRaffle(PLAYER);
+
+        raffle.enterRaffle{value: entranceFee}();
+    }
+
+    function test_cannot_enter_when_raffle_is_calculating() public {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+
+        raffle.performUpkeep("");
+
+        vm.expectRevert(Raffle.Raffle__NotOpen.selector);
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
     }
 }
